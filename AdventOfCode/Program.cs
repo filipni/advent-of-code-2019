@@ -8,7 +8,7 @@ namespace AdventOfCode
 {
     class Program
     {
-        const string INPUT_DIR = @"C:\Users\filip\source\repos\AdventOfCode\AdventOfCode\input";
+        const string INPUT_DIR = @"input";
 
         static int[] GetInput(string filename, string delimiter)
         {
