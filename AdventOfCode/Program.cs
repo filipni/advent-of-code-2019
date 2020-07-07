@@ -209,9 +209,19 @@ namespace AdventOfCode
 
         static void Day5()
         {
+            Console.WriteLine($"Part 1: {RunDiagnosticTest(1)}");
+            Console.WriteLine($"Part 2: {RunDiagnosticTest(5)}");
+        }
+
+        static int RunDiagnosticTest(int code)
+        {
             int[] data = GetInput("day5.txt", ",");
-            IntcodeComputer computer = new IntcodeComputer(data);
-            computer.Run();
+            var input = new List<int> {code};
+
+            IntcodeComputer computer = new IntcodeComputer(data, input);
+            var output = computer.Run();
+
+            return output[output.Count - 1];
         }
 
         static Dictionary<string, string> ParseDay6Input()
@@ -269,6 +279,61 @@ namespace AdventOfCode
             Console.WriteLine("Minimum number of transfers: {0}", minTransfers);
         }
 
-        static void Main() => Day6();
+        static void Day7()
+        {
+            var phaseCodes = new HashSet<int> {0, 1, 2, 3, 4};
+            var permutations = GetPermutations(phaseCodes); 
+            int largestOutput = -1;
+
+            foreach (var p in permutations)
+            {
+                int output = 0;
+                p.ForEach(phaseCode => output = AmplifySignal(phaseCode, output));
+
+                if (output > largestOutput)
+                    largestOutput = output;
+            }
+
+            Console.WriteLine($"Largest output: {largestOutput}");
+        }
+
+        public static List<List<T>> GetPermutations<T>(IEnumerable<T> collection)
+        {
+            var permutations = new List<List<T>>();
+            var set = new HashSet<T>(collection);
+            GetPermutationsHelper(set, new List<T>(), permutations); 
+            return permutations;
+        }
+
+        private static void GetPermutationsHelper<T>(HashSet<T> set, List<T> candidate, List<List<T>> permutations)
+        {
+            if (candidate.Count == set.Count)
+            {
+                permutations.Add(candidate);
+                return;
+            }
+
+            foreach(var item in set)
+            {
+                if (!candidate.Contains(item))
+                {
+                    var updatedCandidate = new List<T>(candidate);
+                    updatedCandidate.Add(item);
+                    GetPermutationsHelper(set, updatedCandidate, permutations);
+                }
+            }
+        }
+
+        public static int AmplifySignal(int phaseSetting, int signal)
+        {
+            int[] program = Utils.GetInput("day7.txt", ",");
+            var input = new List<int> {phaseSetting, signal};
+            var computer = new IntcodeComputer(program, input, true);
+
+            List<int> output = computer.Run();
+            return output[0];
+        }
+
+        static void Main() => Day7();
     }
 }

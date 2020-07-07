@@ -5,24 +5,34 @@ namespace AdventOfCode
 {
     class IntcodeComputer
     {
-        private int pc;
-        private int[] memory;
-        private bool halted;
+        private int Pc;
+        private int[] Memory;
+        private bool Halted;
+        private bool ExitAtOutput;
+        private Queue<int> Input = new Queue<int>();
+        private List<int> Output = new List<int>();
 
-        public IntcodeComputer(int[] memory) => this.memory = memory;
-
-        public void Run()
+        public IntcodeComputer(int[] memory, IEnumerable<int> input = null, bool exitAtOutput = false)
         {
-            while (!halted)
+            this.Memory = memory;
+            if (input != null)
+                Input = new Queue<int>(input);
+            ExitAtOutput = exitAtOutput;
+        }
+
+        public List<int> Run()
+        {
+            while (!Halted)
             {
                 int instructionLength = ExecuteInstruction();
-                pc += instructionLength;
+                Pc += instructionLength;
             }
+            return new List<int>(Output);
         }
 
         private int ExecuteInstruction()
         {
-            int instructionFormat = memory[pc];
+            int instructionFormat = Memory[Pc];
             int opcode = GetDigits(instructionFormat, 0, 2);
             int paramsFormat = GetDigits(instructionFormat, 2, 3);
             List<int> paramPositions;
@@ -31,28 +41,28 @@ namespace AdventOfCode
             {
                 case 1:
                     paramPositions = GetParamPositions(paramsFormat, 3);
-                    return ADD(memory[paramPositions[0]], memory[paramPositions[1]], out memory[paramPositions[2]]);
+                    return ADD(Memory[paramPositions[0]], Memory[paramPositions[1]], out Memory[paramPositions[2]]);
                 case 2:
                     paramPositions = GetParamPositions(paramsFormat, 3);
-                    return MUL(memory[paramPositions[0]], memory[paramPositions[1]], out memory[paramPositions[2]]);
+                    return MUL(Memory[paramPositions[0]], Memory[paramPositions[1]], out Memory[paramPositions[2]]);
                 case 3:
                     paramPositions = GetParamPositions(paramsFormat, 1);
-                    return IN(out memory[paramPositions[0]]);
+                    return IN(out Memory[paramPositions[0]]);
                 case 4:
                     paramPositions = GetParamPositions(paramsFormat, 1);
-                    return OUT(memory[paramPositions[0]]);
+                    return OUT(Memory[paramPositions[0]]);
                 case 5:
                     paramPositions = GetParamPositions(paramsFormat, 2);
-                    return JT(memory[paramPositions[0]], memory[paramPositions[1]]);
+                    return JT(Memory[paramPositions[0]], Memory[paramPositions[1]]);
                 case 6:
                     paramPositions = GetParamPositions(paramsFormat, 2);
-                    return JF(memory[paramPositions[0]], memory[paramPositions[1]]);
+                    return JF(Memory[paramPositions[0]], Memory[paramPositions[1]]);
                 case 7:
                     paramPositions = GetParamPositions(paramsFormat, 3);
-                    return LET(memory[paramPositions[0]], memory[paramPositions[1]], out memory[paramPositions[2]]);
+                    return LET(Memory[paramPositions[0]], Memory[paramPositions[1]], out Memory[paramPositions[2]]);
                 case 8:
                     paramPositions = GetParamPositions(paramsFormat, 3);
-                    return EQ(memory[paramPositions[0]], memory[paramPositions[1]], out memory[paramPositions[2]]);
+                    return EQ(Memory[paramPositions[0]], Memory[paramPositions[1]], out Memory[paramPositions[2]]);
                 case 99:
                     return HLT();
                 default:
@@ -71,9 +81,9 @@ namespace AdventOfCode
                 int index;
 
                 if (immediateMode)
-                    index = pc + 1 + i;
+                    index = Pc + 1 + i;
                 else
-                    index = memory[pc + 1 + i];
+                    index = Memory[Pc + 1 + i];
 
                 indices.Add(index);
             }
@@ -102,14 +112,14 @@ namespace AdventOfCode
 
         private int IN(out int output)
         {
-            Console.Write("Input: "); 
-            output = int.Parse(Console.ReadLine());
+            output = Input.Dequeue();
             return 2;
         }
 
         private int OUT(int a)
         {
-            Console.WriteLine("Output: {0}", a);
+            Output.Add(a);
+            Halted = ExitAtOutput;
             return 2;
         }
 
@@ -117,7 +127,7 @@ namespace AdventOfCode
         {
             if (a != 0)
             {
-                pc = b;
+                Pc = b;
                 return 0;
             }
             return 3;
@@ -127,7 +137,7 @@ namespace AdventOfCode
         {
             if (a == 0)
             {
-                pc = b;
+                Pc = b;
                 return 0;
             }
             return 3;
@@ -153,7 +163,7 @@ namespace AdventOfCode
 
         private int HLT()
         {
-            halted = true;
+            Halted = true;
             return 1;
         }
     }
