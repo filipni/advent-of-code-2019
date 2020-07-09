@@ -20,10 +20,7 @@ namespace AdventOfCode
             OutputQueue = outputqQueue;
         }
 
-        public Task Run()
-        {
-            return Task.Run(_Run);
-        }
+        public Task Run() => Task.Run(_Run);
 
         private void _Run()
         {
