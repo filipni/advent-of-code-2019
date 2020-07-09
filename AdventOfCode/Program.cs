@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace AdventOfCode
@@ -216,12 +217,13 @@ namespace AdventOfCode
         static int RunDiagnosticTest(int code)
         {
             int[] data = GetInput("day5.txt", ",");
-            var input = new List<int> {code};
+            var inputQueue = new BlockingCollection<int> {code};
+            var outputQueue = new BlockingCollection<int>();
 
-            IntcodeComputer computer = new IntcodeComputer(data, input);
-            var output = computer.Run();
+            IntcodeComputer computer = new IntcodeComputer(data, inputQueue, outputQueue);
+            computer.Run().Wait();
 
-            return output[output.Count - 1];
+            return outputQueue.Last();
         }
 
         static Dictionary<string, string> ParseDay6Input()
@@ -279,33 +281,40 @@ namespace AdventOfCode
             Console.WriteLine("Minimum number of transfers: {0}", minTransfers);
         }
 
-        static void Day7()
+        static void Day7Part1() => Day7(Enumerable.Range(0, 5), false);
+        static void Day7Part2() => Day7(Enumerable.Range(5, 5), true);
+
+        private static void Day7(IEnumerable<int> phaseCodes, bool feedbackOn)
         {
-            var phaseCodes = new HashSet<int> {0, 1, 2, 3, 4};
-            var permutations = GetPermutations(phaseCodes); 
-            int largestOutput = -1;
+            List<List<int>> sequenceSettings = Permutations(phaseCodes); 
+            var largestThrusterValue = -1;
+            var finalSettingSequence = "";
 
-            foreach (var p in permutations)
+            foreach (List<int> settings in sequenceSettings)
             {
-                int output = 0;
-                p.ForEach(phaseCode => output = AmplifySignal(phaseCode, output));
+                int[] program = Utils.GetInput("day7.txt", ",");
+                var amplifier = new AmplifierSequence(settings, program, feedbackOn);
+                int thrusterValue = amplifier.Run(0);
 
-                if (output > largestOutput)
-                    largestOutput = output;
+                if (thrusterValue > largestThrusterValue)
+                {
+                    largestThrusterValue = thrusterValue;
+                    finalSettingSequence = string.Join(",", settings);
+                }
             }
 
-            Console.WriteLine($"Largest output: {largestOutput}");
+            Console.WriteLine($"Max thruster signal: {largestThrusterValue} (setting sequence: {finalSettingSequence})");
         }
 
-        public static List<List<T>> GetPermutations<T>(IEnumerable<T> collection)
+        public static List<List<T>> Permutations<T>(IEnumerable<T> collection)
         {
             var permutations = new List<List<T>>();
             var set = new HashSet<T>(collection);
-            GetPermutationsHelper(set, new List<T>(), permutations); 
+            _Permutations(set, new List<T>(), permutations); 
             return permutations;
         }
 
-        private static void GetPermutationsHelper<T>(HashSet<T> set, List<T> candidate, List<List<T>> permutations)
+        private static void _Permutations<T>(HashSet<T> set, List<T> candidate, List<List<T>> permutations)
         {
             if (candidate.Count == set.Count)
             {
@@ -319,21 +328,11 @@ namespace AdventOfCode
                 {
                     var updatedCandidate = new List<T>(candidate);
                     updatedCandidate.Add(item);
-                    GetPermutationsHelper(set, updatedCandidate, permutations);
+                    _Permutations(set, updatedCandidate, permutations);
                 }
             }
         }
 
-        public static int AmplifySignal(int phaseSetting, int signal)
-        {
-            int[] program = Utils.GetInput("day7.txt", ",");
-            var input = new List<int> {phaseSetting, signal};
-            var computer = new IntcodeComputer(program, input, true);
-
-            List<int> output = computer.Run();
-            return output[0];
-        }
-
-        static void Main() => Day7();
+        static void Main() => Day7Part2();
     }
 }

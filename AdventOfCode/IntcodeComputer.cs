@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace AdventOfCode
 {
@@ -8,26 +10,28 @@ namespace AdventOfCode
         private int Pc;
         private int[] Memory;
         private bool Halted;
-        private bool ExitAtOutput;
-        private Queue<int> Input = new Queue<int>();
-        private List<int> Output = new List<int>();
+        private BlockingCollection<int> InputQueue;
+        private BlockingCollection<int> OutputQueue;
 
-        public IntcodeComputer(int[] memory, IEnumerable<int> input = null, bool exitAtOutput = false)
+        public IntcodeComputer(int[] memory, BlockingCollection<int> inputQueue, BlockingCollection<int> outputqQueue)
         {
-            this.Memory = memory;
-            if (input != null)
-                Input = new Queue<int>(input);
-            ExitAtOutput = exitAtOutput;
+            this.Memory = (int[]) memory.Clone();
+            InputQueue = inputQueue;
+            OutputQueue = outputqQueue;
         }
 
-        public List<int> Run()
+        public Task Run()
+        {
+            return Task.Run(_Run);
+        }
+
+        private void _Run()
         {
             while (!Halted)
             {
                 int instructionLength = ExecuteInstruction();
                 Pc += instructionLength;
             }
-            return new List<int>(Output);
         }
 
         private int ExecuteInstruction()
@@ -112,14 +116,13 @@ namespace AdventOfCode
 
         private int IN(out int output)
         {
-            output = Input.Dequeue();
+            output = InputQueue.Take();
             return 2;
         }
 
         private int OUT(int a)
         {
-            Output.Add(a);
-            Halted = ExitAtOutput;
+            OutputQueue.Add(a);
             return 2;
         }
 
@@ -164,6 +167,7 @@ namespace AdventOfCode
         private int HLT()
         {
             Halted = true;
+            OutputQueue.CompleteAdding();
             return 1;
         }
     }
