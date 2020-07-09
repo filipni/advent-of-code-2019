@@ -10,7 +10,7 @@ namespace AdventOfCode
     {
         private long Pc;
         private long relativeBase;
-        private const long MemorySize = 10000;
+        private const int MemorySize = 10000;
         private long[] Memory;
         private bool Halted;
         private BlockingCollection<long> InputQueue;
@@ -18,7 +18,7 @@ namespace AdventOfCode
 
         public IntcodeComputer(long[] memory, BlockingCollection<long> inputQueue, BlockingCollection<long> outputqQueue)
         {
-            Memory = Enumerable.Repeat(0L, 10000).ToArray();
+            Memory = Enumerable.Repeat(0L, MemorySize).ToArray();
             for (int i = 0; i < memory.Length; i++)
                 Memory[i] = memory[i];
 
@@ -35,20 +35,6 @@ namespace AdventOfCode
                 long instructionLength = ExecuteInstruction();
                 Pc += instructionLength;
             }
-        }
-
-        long MemoryRead(long address)
-        {
-            if (address < 0)
-                throw new ArgumentException("Negative addresses are invalid");
-            return Memory[address];
-        }
-
-        void MemoryWrite(long value, long address)
-        {
-            if (address < 0)
-                throw new ArgumentException("Negative addresses are invalid");
-            Memory[address] = value;
         }
 
         private long ExecuteInstruction()
