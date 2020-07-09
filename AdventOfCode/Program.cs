@@ -429,6 +429,76 @@ namespace AdventOfCode
             RunDiagnosticTest(2, "day9.txt");
         }
 
-        static void Main() => Day9();
+        static private void Day10()
+        {
+            var input = Utils.GetTextInput("day10.txt", "\n");
+            List<(int, int)> asteroidPositions = GetAsteroidPositions(input);
+
+            int max = -1;
+            (int, int) maxPosition = (-1, -1);
+
+            foreach (var currentPosition in asteroidPositions)
+            {
+                int asteroidCount = 0;
+                var candidatePositions = new List<(int, int)>(asteroidPositions);
+                candidatePositions.Remove(currentPosition);
+
+                foreach (var candidate in candidatePositions)
+                {
+                    var potentialBlockers = new List<(int, int)>(candidatePositions);
+                    potentialBlockers.Remove(candidate);
+
+                    bool isBlocked = false;
+
+                    foreach (var blocker in potentialBlockers)
+                    {
+                        if (PointOnLine(currentPosition, candidate, blocker))
+                        {
+                            isBlocked = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isBlocked)
+                        asteroidCount++;
+                }
+
+                if (asteroidCount > max)
+                {
+                    max = asteroidCount;
+                    maxPosition = currentPosition;
+                }
+            }
+
+            Console.WriteLine($"Maximum asteroids that can be seen: {max} (from ({maxPosition.Item1}, {maxPosition.Item2}))");
+        }
+
+        private static List<(int, int)> GetAsteroidPositions(string[] input)
+        {
+            var asteroidPositions = new List<(int, int)>();
+            for (int i = 0; i < input.Length; i++)
+            {
+                string row = input[i];
+                for (int j = 0; j < row.Length; j++)
+                {
+                    if (row[j] == '#')
+                        asteroidPositions.Add((j, i));
+                }
+            }
+            return asteroidPositions;
+        }
+
+        private static bool PointOnLine((int x,int y) lineStart, (int x,int y) lineEnd, (int x, int y) point) 
+        {
+            return Math.Round(Distance(lineStart, point) + Distance(lineEnd, point), 5) == Math.Round(Distance(lineStart, lineEnd), 5);
+        }
+
+        private static double Distance((int x, int y) a, (int x, int y) b)
+        {
+            var distance = Math.Sqrt(Math.Pow(a.x - b.x, 2) + Math.Pow(a.y - b.y, 2));
+            return distance;
+        }
+
+        static void Main() => Day10();
     }
 }
