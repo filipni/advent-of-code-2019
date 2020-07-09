@@ -405,10 +405,8 @@ namespace AdventOfCode
             for(int i = 0; i < layer.GetLength(0); i++)
                 for (int j = 0; j < layer.GetLength(1); j++)
                 {
-                    char imagePixel = image[i][j];
                     char layerPixel = layer[i, j];
-
-                    if (imagePixel == '2' && layerPixel != '2')
+                    if (image[i][j] == '2' && layerPixel != '2')
                         image[i][j] = layerPixel == '0' ? '█' : ' ';
                 }
         }
