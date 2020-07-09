@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -7,15 +8,20 @@ namespace AdventOfCode
 {
     class IntcodeComputer
     {
-        private int Pc;
-        private int[] Memory;
+        private long Pc;
+        private long relativeBase;
+        private const long MemorySize = 10000;
+        private long[] Memory;
         private bool Halted;
-        private BlockingCollection<int> InputQueue;
-        private BlockingCollection<int> OutputQueue;
+        private BlockingCollection<long> InputQueue;
+        private BlockingCollection<long> OutputQueue;
 
-        public IntcodeComputer(int[] memory, BlockingCollection<int> inputQueue, BlockingCollection<int> outputqQueue)
+        public IntcodeComputer(long[] memory, BlockingCollection<long> inputQueue, BlockingCollection<long> outputqQueue)
         {
-            this.Memory = (int[]) memory.Clone();
+            Memory = Enumerable.Repeat(0L, 10000).ToArray();
+            for (int i = 0; i < memory.Length; i++)
+                Memory[i] = memory[i];
+
             InputQueue = inputQueue;
             OutputQueue = outputqQueue;
         }
@@ -26,17 +32,31 @@ namespace AdventOfCode
         {
             while (!Halted)
             {
-                int instructionLength = ExecuteInstruction();
+                long instructionLength = ExecuteInstruction();
                 Pc += instructionLength;
             }
         }
 
-        private int ExecuteInstruction()
+        long MemoryRead(long address)
         {
-            int instructionFormat = Memory[Pc];
-            int opcode = GetDigits(instructionFormat, 0, 2);
-            int paramsFormat = GetDigits(instructionFormat, 2, 3);
-            List<int> paramPositions;
+            if (address < 0)
+                throw new ArgumentException("Negative addresses are invalid");
+            return Memory[address];
+        }
+
+        void MemoryWrite(long value, long address)
+        {
+            if (address < 0)
+                throw new ArgumentException("Negative addresses are invalid");
+            Memory[address] = value;
+        }
+
+        private long ExecuteInstruction()
+        {
+            long instructionFormat = Memory[Pc];
+            long opcode = GetDigits(instructionFormat, 0, 2);
+            long paramsFormat = GetDigits(instructionFormat, 2, 3);
+            List<long> paramPositions;
 
             switch (opcode)
             {
@@ -64,6 +84,9 @@ namespace AdventOfCode
                 case 8:
                     paramPositions = GetParamPositions(paramsFormat, 3);
                     return EQ(Memory[paramPositions[0]], Memory[paramPositions[1]], out Memory[paramPositions[2]]);
+                case 9:
+                    paramPositions = GetParamPositions(paramsFormat, 1);
+                    return REL(Memory[paramPositions[0]]);
                 case 99:
                     return HLT();
                 default:
@@ -72,19 +95,27 @@ namespace AdventOfCode
             }
         }
 
-        private List<int> GetParamPositions(int paramsFormat, int numParams)
+        private List<long> GetParamPositions(long paramsFormat, int numParams)
         {
-            var indices = new List<int>();
+            var indices = new List<long>();
 
             for (int i = 0; i < numParams; i++)
             {
-                bool immediateMode = GetDigits(paramsFormat, i, 1) == 1;
-                int index;
+                long parameterMode = GetDigits(paramsFormat, i, 1);
+                long index;
 
-                if (immediateMode)
-                    index = Pc + 1 + i;
-                else
-                    index = Memory[Pc + 1 + i];
+                switch (parameterMode)
+                {
+                    case 1: // Immediate mode
+                        index = Pc + 1 + i;
+                        break;
+                    case 2: // Relative mode
+                        index = relativeBase + Memory[Pc + 1 + i];
+                        break;
+                    default: // Position mode
+                        index = Memory[Pc + 1 + i];
+                        break;
+                }
 
                 indices.Add(index);
             }
@@ -92,38 +123,38 @@ namespace AdventOfCode
             return indices;
         }
 
-        private int GetDigits(int num, int start, int length)
+        private long GetDigits(long num, int start, int length)
         {
             start = (int)Math.Pow(10, start);
             length = (int)Math.Pow(10, length);
             return num / start % length;
         }
 
-        private int ADD(int a, int b, out int output)
+        private long ADD(long a, long b, out long output)
         {
             output = a + b;
             return 4;
         }
 
-        private int MUL(int a, int b, out int output)
+        private long MUL(long a, long b, out long output)
         {
             output = a * b;
             return 4;
         }
 
-        private int IN(out int output)
+        private long IN(out long output)
         {
             output = InputQueue.Take();
             return 2;
         }
 
-        private int OUT(int a)
+        private long OUT(long a)
         {
             OutputQueue.Add(a);
             return 2;
         }
 
-        private int JT(int a, int b)
+        private long JT(long a, long b)
         {
             if (a != 0)
             {
@@ -133,7 +164,7 @@ namespace AdventOfCode
             return 3;
         }
 
-        private int JF(int a, int b)
+        private long JF(long a, long b)
         {
             if (a == 0)
             {
@@ -143,7 +174,7 @@ namespace AdventOfCode
             return 3;
         }
 
-        private int LET(int a, int b, out int output)
+        private int LET(long a, long b, out long output)
         {
             if (a < b)
                 output = 1;
@@ -152,7 +183,7 @@ namespace AdventOfCode
             return 4;
         }
 
-        private int EQ(int a, int b, out int output)
+        private long EQ(long a, long b, out long output)
         {
             if (a == b)
                 output = 1;
@@ -161,11 +192,17 @@ namespace AdventOfCode
             return 4;
         }
 
-        private int HLT()
+        private long HLT()
         {
             Halted = true;
             OutputQueue.CompleteAdding();
             return 1;
+        }
+
+        private long REL(long a)
+        {
+            relativeBase += a;
+            return 2;
         }
     }
 }

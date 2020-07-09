@@ -7,24 +7,24 @@ namespace AdventOfCode
 {
     public class AmplifierSequence
     {
-        private BlockingCollection<int> SequenceInput = new BlockingCollection<int>();
-        private BlockingCollection<int> SequenceOutput;
+        private BlockingCollection<long> SequenceInput = new BlockingCollection<long>();
+        private BlockingCollection<long> SequenceOutput;
         private List<IntcodeComputer> Amplifiers = new List<IntcodeComputer>();
 
-        public AmplifierSequence(List<int> settingSequence, int[] program, bool feedbackOn = false)
+        public AmplifierSequence(List<long> settingSequence, long[] program, bool feedbackOn = false)
         {
-            BlockingCollection<int> inputQueue = SequenceInput;
+            BlockingCollection<long> inputQueue = SequenceInput;
             int lastIndex = settingSequence.Count - 1;
 
             for(int i = 0; i <= lastIndex; i++)
             {
                 inputQueue.Add(settingSequence[i]);
 
-                BlockingCollection<int> outputQueue;
+                BlockingCollection<long> outputQueue;
                 if (i == lastIndex && feedbackOn)
                     outputQueue = SequenceInput; 
                 else
-                    outputQueue = new BlockingCollection<int>();
+                    outputQueue = new BlockingCollection<long>();
 
                 IntcodeComputer amp = new IntcodeComputer(program, inputQueue, outputQueue);
                 Amplifiers.Add(amp);
@@ -35,7 +35,7 @@ namespace AdventOfCode
             SequenceOutput = inputQueue;
         }
 
-        public int Run(int input)
+        public long Run(int input)
         {
             SequenceInput.Add(input);
 

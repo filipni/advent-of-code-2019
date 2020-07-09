@@ -9,17 +9,17 @@ namespace AdventOfCode
 {
     class Program
     {
-        static int Day1Part1() => Utils.GetInput("day1.txt", "\n").Select(x => x / 3 - 2).Sum();
+        static long Day1Part1() => Utils.GetInput("day1.txt", "\n").Select(x => x / 3 - 2).Sum();
 
         static void Day1Part2()
         {
-            var input = new Queue<int>(Utils.GetInput("day1.txt", "\n"));
-            int sum = 0;
+            var input = new Queue<long>(Utils.GetInput("day1.txt", "\n"));
+            long sum = 0;
 
             while (input.Count != 0)
             {
-                int module = input.Dequeue();
-                int fuel = module / 3 - 2;
+                long module = input.Dequeue();
+                long fuel = module / 3 - 2;
                 if (fuel > 0)
                 {
                     sum += fuel;
@@ -32,33 +32,33 @@ namespace AdventOfCode
 
         static void Day2Part1()
         {
-            int[] data = Utils.GetInput("day2.txt", ",");
+            long[] data = Utils.GetInput("day2.txt", ",");
             Console.WriteLine("Output: {0}", RunProgram(12, 2, data));
         }
 
         static void Day2Part2()
         {
-            int[] data = Utils.GetInput("day2.txt", ",");
+            long[] data = Utils.GetInput("day2.txt", ",");
 
             var outputs = from x in Enumerable.Range(0, 100)
                           from y in Enumerable.Range(0, 100)
-                          where RunProgram(x, y, (int[])data.Clone()) == 19690720
+                          where RunProgram(x, y, (long[])data.Clone()) == 19690720
                           select 100 * x + y;
 
             Console.WriteLine("Output: {0}", outputs.FirstOrDefault());
         }
 
-        static int RunProgram(int noun, int verb, int[] memory)
+        static long RunProgram(int noun, int verb, long[] memory)
         {
             memory[1] = noun;
             memory[2] = verb;
 
             for (int i = 0; i < memory.Length; i += 4)
             {
-                int opcode = memory[i];
-                int input1Index = memory[i + 1];
-                int input2Index = memory[i + 2];
-                int outputIndex = memory[i + 3];
+                long opcode = memory[i];
+                long input1Index = memory[i + 1];
+                long input2Index = memory[i + 2];
+                long outputIndex = memory[i + 3];
 
                 switch (opcode)
                 {
@@ -198,20 +198,27 @@ namespace AdventOfCode
 
         static void Day5()
         {
-            Console.WriteLine($"Part 1: {RunDiagnosticTest(1)}");
-            Console.WriteLine($"Part 2: {RunDiagnosticTest(5)}");
+            Console.WriteLine($"Part 1:");
+            RunDiagnosticTest(1, "day5.txt");
+
+            Console.WriteLine($"Part 2:");
+            RunDiagnosticTest(5, "day5.txt");
         }
 
-        static int RunDiagnosticTest(int code)
+        static void RunDiagnosticTest(int code, string inputFilename)
         {
-            int[] data = Utils.GetInput("day5.txt", ",");
-            var inputQueue = new BlockingCollection<int> {code};
-            var outputQueue = new BlockingCollection<int>();
+            long[] data = Utils.GetInput(inputFilename, ",");
+            var inputQueue = new BlockingCollection<long> {code};
+            var outputQueue = new BlockingCollection<long>();
 
             IntcodeComputer computer = new IntcodeComputer(data, inputQueue, outputQueue);
             computer.Run().Wait();
 
-            return outputQueue.Last();
+            var output = new List<long>();
+            while (!outputQueue.IsCompleted)
+                output.Add(outputQueue.Take());
+
+            Console.WriteLine(string.Join(",", output));
         }
 
         static Dictionary<string, string> ParseDay6Input()
@@ -275,14 +282,16 @@ namespace AdventOfCode
         private static void Day7(IEnumerable<int> phaseCodes, bool feedbackOn)
         {
             List<List<int>> sequenceSettings = Permutations(phaseCodes); 
-            var largestThrusterValue = -1;
+            long largestThrusterValue = -1;
             var finalSettingSequence = "";
 
             foreach (List<int> settings in sequenceSettings)
             {
-                int[] program = Utils.GetInput("day7.txt", ",");
-                var amplifier = new AmplifierSequence(settings, program, feedbackOn);
-                int thrusterValue = amplifier.Run(0);
+                List<long> settingsConverted = settings.ConvertAll(x => (long)x);
+                long[] program = Utils.GetInput("day7.txt", ",");
+
+                var amplifier = new AmplifierSequence(settingsConverted, program, feedbackOn);
+                long thrusterValue = amplifier.Run(0);
 
                 if (thrusterValue > largestThrusterValue)
                 {
@@ -411,6 +420,15 @@ namespace AdventOfCode
                 }
         }
 
-        static void Main() => Day8Part2();
+        static private void Day9()
+        {
+            Console.WriteLine($"Part 1:");
+            RunDiagnosticTest(1, "day9.txt");
+
+            Console.WriteLine($"Part 2:");
+            RunDiagnosticTest(2, "day9.txt");
+        }
+
+        static void Main() => Day9();
     }
 }
