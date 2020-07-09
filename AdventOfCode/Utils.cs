@@ -17,5 +17,11 @@ namespace AdventOfCode
 
             return parsedInput.ToArray();
         }
+
+        public static string GetText(string filename)
+        {
+            string path = Path.Combine(INPUT_DIR, filename);
+            return File.ReadAllText(path);
+        }
     }
 }

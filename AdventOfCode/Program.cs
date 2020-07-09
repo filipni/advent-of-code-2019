@@ -9,23 +9,11 @@ namespace AdventOfCode
 {
     class Program
     {
-        const string INPUT_DIR = @"input";
-
-        static int[] GetInput(string filename, string delimiter)
-        {
-            string path     = Path.Combine(INPUT_DIR, filename);
-            string text     = File.ReadAllText(path);
-            var input       = text.Split(delimiter).Where(x => double.TryParse(x, out _));
-            var parsedInput = input.Select(x => int.Parse(x));
-
-            return parsedInput.ToArray();
-        }
-        
-        static int Day1Part1() => GetInput("day1.txt", "\n").Select(x => x / 3 - 2).Sum();
+        static int Day1Part1() => Utils.GetInput("day1.txt", "\n").Select(x => x / 3 - 2).Sum();
 
         static void Day1Part2()
         {
-            var input = new Queue<int>(GetInput("day1.txt", "\n"));
+            var input = new Queue<int>(Utils.GetInput("day1.txt", "\n"));
             int sum = 0;
 
             while (input.Count != 0)
@@ -44,13 +32,13 @@ namespace AdventOfCode
 
         static void Day2Part1()
         {
-            int[] data = GetInput("day2.txt", ",");
+            int[] data = Utils.GetInput("day2.txt", ",");
             Console.WriteLine("Output: {0}", RunProgram(12, 2, data));
         }
 
         static void Day2Part2()
         {
-            int[] data = GetInput("day2.txt", ",");
+            int[] data = Utils.GetInput("day2.txt", ",");
 
             var outputs = from x in Enumerable.Range(0, 100)
                           from y in Enumerable.Range(0, 100)
@@ -94,7 +82,7 @@ namespace AdventOfCode
 
         static void Day3()
         {
-            string filepath = Path.Combine(INPUT_DIR, "day3.txt");
+            string filepath = Path.Combine(Utils.INPUT_DIR, "day3.txt");
             string text = System.IO.File.ReadAllText(filepath);
             string[] inputs = text.Split("\n");
 
@@ -216,7 +204,7 @@ namespace AdventOfCode
 
         static int RunDiagnosticTest(int code)
         {
-            int[] data = GetInput("day5.txt", ",");
+            int[] data = Utils.GetInput("day5.txt", ",");
             var inputQueue = new BlockingCollection<int> {code};
             var outputQueue = new BlockingCollection<int>();
 
@@ -230,7 +218,7 @@ namespace AdventOfCode
         {
             var orbits = new Dictionary<string, string>();
 
-            string filepath = Path.Combine(INPUT_DIR, "day6.txt");
+            string filepath = Path.Combine(Utils.INPUT_DIR, "day6.txt");
             var lines = System.IO.File.ReadAllLines(filepath);
 
             foreach (string s in lines)
@@ -333,6 +321,98 @@ namespace AdventOfCode
             }
         }
 
-        static void Main() => Day7Part2();
+        public static void Day8Part1()
+        {
+            string imageData = Utils.GetText("day8.txt"); 
+            List<char[,]> imageLayers = GetImageLayers(imageData, 25, 6);
+
+            var counts = new List<Dictionary<char,int>>();
+            var minLayer = -1;
+            var min = int.MaxValue;  
+
+            for (int i = 0; i < imageLayers.Count; i++)
+            {
+                var digitCount = new Dictionary<char, int>();
+                char[,] layer = imageLayers[i];
+
+                foreach (char c in layer)
+                {
+                    if (digitCount.ContainsKey(c))
+                        digitCount[c]++;
+                    else
+                        digitCount.Add(c, 1);
+                }
+
+                if (digitCount.ContainsKey('0') && digitCount['0'] <= min)
+                {
+                    minLayer = i;
+                    min = digitCount['0'];
+                }
+
+                counts.Add(digitCount);
+            }
+
+            Dictionary<char,int> minLayerDigitCount = counts[minLayer];
+            minLayerDigitCount.TryGetValue('1', out int count1);
+            minLayerDigitCount.TryGetValue('2', out int count2);
+
+            var biosPassword = count1 * count2;
+            Console.WriteLine($"BIOS password: {biosPassword}");
+        }
+
+        public static void Day8Part2()
+        {
+            const int imageWidth = 25;
+            const int imageHeight = 6;
+
+            string imageData = Utils.GetText("day8.txt"); 
+            List<char[,]> imageLayers = GetImageLayers(imageData, imageWidth, imageHeight);
+
+            var image = new List<char[]>();
+
+            // Init image with transparent pixels
+            for(int i = 0; i < imageHeight; i++)
+                image.Add(new String('2', imageWidth).ToArray());
+
+            imageLayers.ForEach(layer => SuperImposeLayer(image, layer));
+            
+            image.ForEach(row => Console.WriteLine(row));
+        }
+
+        private static List<char[,]> GetImageLayers(string imageData, int layerWidth, int layerHeight)
+        {
+            int layerSize = layerWidth * layerHeight;
+            int numLayers = imageData.Length / layerSize;
+
+            List<char[,]> imageLayers = new List<char[,]>();
+
+            for (int i = 0; i < numLayers; i++)
+            {
+                char[,] layer = new char[layerHeight, layerWidth]; 
+                for (int j = 0; j < layerHeight; j++)
+                {
+                    for (int k = 0; k < layerWidth; k++)
+                        layer[j, k] = imageData[i * layerSize + j * layerWidth + k];
+                }
+                imageLayers.Add(layer);
+            }
+
+            return imageLayers;
+        }
+
+        static private void SuperImposeLayer(List<char[]> image, char[,] layer)
+        {
+            for(int i = 0; i < layer.GetLength(0); i++)
+                for (int j = 0; j < layer.GetLength(1); j++)
+                {
+                    char imagePixel = image[i][j];
+                    char layerPixel = layer[i, j];
+
+                    if (imagePixel == '2' && layerPixel != '2')
+                        image[i][j] = layerPixel == '0' ? '█' : ' ';
+                }
+        }
+
+        static void Main() => Day8Part2();
     }
 }
