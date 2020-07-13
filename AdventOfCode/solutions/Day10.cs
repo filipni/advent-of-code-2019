@@ -12,25 +12,24 @@ namespace AdventOfCode
             var input = Utils.GetTextInput("day10.txt", "\n");
             List<(int, int)> asteroidPositions = GetAsteroidPositions(input);
 
-            int max = -1;
-            (int, int) maxPosition = (-1, -1);
+            int maxAsteroidCount = -1;
+            (int x, int y) maxPosition = (-1, -1);
 
-            foreach (var currentPosition in asteroidPositions)
+            foreach (var position in asteroidPositions)
             {
                 int asteroidCount = 0;
-                var candidatePositions = new List<(int, int)>(asteroidPositions);
-                candidatePositions.Remove(currentPosition);
+                var potentialNeighbours = new List<(int, int)>(asteroidPositions);
+                potentialNeighbours.Remove(position);
 
-                foreach (var candidate in candidatePositions)
+                foreach (var neighbour in potentialNeighbours)
                 {
-                    var potentialBlockers = new List<(int, int)>(candidatePositions);
-                    potentialBlockers.Remove(candidate);
+                    var potentialBlockers = new List<(int, int)>(potentialNeighbours);
+                    potentialBlockers.Remove(neighbour);
 
                     bool isBlocked = false;
-
                     foreach (var blocker in potentialBlockers)
                     {
-                        if (PointOnLine(currentPosition, candidate, blocker))
+                        if (PointOnLine(position, neighbour, blocker))
                         {
                             isBlocked = true;
                             break;
@@ -41,74 +40,60 @@ namespace AdventOfCode
                         asteroidCount++;
                 }
 
-                if (asteroidCount > max)
+                if (asteroidCount > maxAsteroidCount)
                 {
-                    max = asteroidCount;
-                    maxPosition = currentPosition;
+                    maxAsteroidCount = asteroidCount;
+                    maxPosition = position;
                 }
             }
 
-            Console.WriteLine($"Maximum asteroids that can be seen: {max} (from ({maxPosition.Item1}, {maxPosition.Item2}))");
+            Console.WriteLine($"Maximum asteroids that can be seen: {maxAsteroidCount} (from ({maxPosition.x}, {maxPosition.y}))");
         }
 
         static public void Part2()
         {
-            (int x, int y) stationPosition = (8, 3);
+            (int x, int y) basePosition = (29, 28);
             var input = Utils.GetTextInput("day10.txt", "\n");
 
             List<(int, int)> asteroidPositions = GetAsteroidPositions(input);
-            asteroidPositions.Remove(stationPosition);
+            asteroidPositions.Remove(basePosition);
 
-            double laserMagnitude = 30;            
-            double laserPhase = -Math.PI / 2;
-
-            (int x, int y) latestRemoved = (-1, -1);
-            int counter = 0;
-
-            while (counter < 200)
+            var angleToAsteroids = new Dictionary<double, List<(double, (int, int))>>();
+            foreach ((int x, int y) asteroid in asteroidPositions)
             {
-                (double x, double y) laserEnd;
-                Complex complexPos = Complex.FromPolarCoordinates(laserMagnitude, laserPhase);
-                laserEnd.x = complexPos.Real;
-                laserEnd.y = complexPos.Imaginary;
-
-                var candidates = new List<(int, int)>();
-                foreach ((int x, int y) pos in asteroidPositions)
-                {
-                    (int x, int y) normailizedPos;
-                    normailizedPos.x = pos.x - stationPosition.x;
-                    normailizedPos.y = pos.y - stationPosition.y;
-
-                    if (PointOnLine((0, 0), laserEnd, normailizedPos))
-                        candidates.Add(pos);
-                }
-
-                (int, int) minPos = (0, 0);
-                double min = double.MaxValue;
-                foreach (var p in candidates)
-                {
-                    double distance = Distance(stationPosition, p);
-                    if (distance < min)
-                    {
-                        min = distance;
-                        minPos = p;
-                    }
-                }
-
-                if (candidates.Any())
-                {
-                    asteroidPositions.Remove(minPos);
-                    latestRemoved = minPos;
-                    counter++;
-                    Console.WriteLine($"The {counter} to be vaporized is at {minPos}");
-                }
-
-                laserPhase += 0.0037;
+                double angle = (Math.Atan2(asteroid.y - basePosition.y, asteroid.x - basePosition.x) + 2.5 * Math.PI) % (2 * Math.PI);
+                double distance = Distance(asteroid, basePosition);
+                
+                if (angleToAsteroids.ContainsKey(angle))
+                    angleToAsteroids[angle].Add((distance, asteroid)); 
+                else
+                    angleToAsteroids.Add(angle, new List<(double, (int, int))> {(distance, asteroid)});
             }
 
-            Console.WriteLine($"200th asteroid removed: {latestRemoved}");
-            int answer = latestRemoved.x * 100 + latestRemoved.y;
-            Console.WriteLine($"Answer: {answer}");
+            var angles = angleToAsteroids.Keys.OrderBy(x => x);
+            int counter = 0;
+
+            while(true)
+            {
+                foreach (double a in angles)
+                {
+                    var asteroids = angleToAsteroids[a];
+                    if (asteroids.Count == 0)
+                        continue;
+
+                    (double distance, (int x, int y) position) asteroid = asteroids[0];
+
+                    asteroids.Remove(asteroid);
+                    counter++;
+
+                    if (counter == 200)
+                    {
+                        int answer = asteroid.position.x * 100 + asteroid.position.y;
+                        Console.WriteLine($"Answer: {answer}");
+                        System.Environment.Exit(0);
+                    }
+                }
+            }
         }
 
         private static List<(int, int)> GetAsteroidPositions(string[] input)
@@ -129,7 +114,7 @@ namespace AdventOfCode
         private static bool PointOnLine((double x, double y) lineStart, (double x, double y) lineEnd, (double x, double y) point) 
         {
             double diff = Distance(lineStart, point) + Distance(lineEnd, point) - Distance(lineStart, lineEnd);
-            return Math.Abs(diff) < 0.000009;
+            return Math.Abs(diff) < 0.00001;
         }
 
         private static double Distance((double x, double y) a, (double x, double y) b)
