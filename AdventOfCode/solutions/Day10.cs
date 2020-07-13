@@ -69,8 +69,8 @@ namespace AdventOfCode
             {
                 (double x, double y) laserEnd;
                 Complex complexPos = Complex.FromPolarCoordinates(laserMagnitude, laserPhase);
-                laserEnd.x = Math.Round(complexPos.Real, 15);
-                laserEnd.y = Math.Round(complexPos.Imaginary, 15);
+                laserEnd.x = complexPos.Real;
+                laserEnd.y = complexPos.Imaginary;
 
                 var candidates = new List<(int, int)>();
                 foreach ((int x, int y) pos in asteroidPositions)
@@ -103,7 +103,7 @@ namespace AdventOfCode
                     Console.WriteLine($"The {counter} to be vaporized is at {minPos}");
                 }
 
-                laserPhase += 0.002;
+                laserPhase += 0.0037;
             }
 
             Console.WriteLine($"200th asteroid removed: {latestRemoved}");
@@ -128,7 +128,8 @@ namespace AdventOfCode
 
         private static bool PointOnLine((double x, double y) lineStart, (double x, double y) lineEnd, (double x, double y) point) 
         {
-            return Math.Round(Distance(lineStart, point) + Distance(lineEnd, point), 5) == Math.Round(Distance(lineStart, lineEnd), 5);
+            double diff = Distance(lineStart, point) + Distance(lineEnd, point) - Distance(lineStart, lineEnd);
+            return Math.Abs(diff) < 0.000009;
         }
 
         private static double Distance((double x, double y) a, (double x, double y) b)
