@@ -9,13 +9,13 @@ namespace AdventOfCode
     {
         public static void Part1()
         {
-            long[] data = Utils.GetInput("day2.txt", ",");
+            long[] data = Utils.GetNumberInput("day2.txt", ",");
             Console.WriteLine("Output: {0}", RunProgram(12, 2, data));
         }
 
         public static void Part2()
         {
-            long[] data = Utils.GetInput("day2.txt", ",");
+            long[] data = Utils.GetNumberInput("day2.txt", ",");
 
             var outputs = from x in Enumerable.Range(0, 100)
                           from y in Enumerable.Range(0, 100)

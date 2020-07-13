@@ -9,7 +9,7 @@ namespace AdventOfCode
     {
         static public void Part1()
         {
-            var input = Utils.GetTextInput("day10.txt", "\n");
+            var input = Utils.GetRows("day10.txt");
             List<(int, int)> asteroidPositions = GetAsteroidPositions(input);
 
             int maxAsteroidCount = -1;
@@ -53,7 +53,7 @@ namespace AdventOfCode
         static public void Part2()
         {
             (int x, int y) basePosition = (29, 28);
-            var input = Utils.GetTextInput("day10.txt", "\n");
+            var input = Utils.GetRows("day10.txt");
 
             List<(int, int)> asteroidPositions = GetAsteroidPositions(input);
             asteroidPositions.Remove(basePosition);

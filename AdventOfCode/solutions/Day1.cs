@@ -6,11 +6,11 @@ namespace AdventOfCode
 {
     class Day1
     {
-        public static void Part1() => Console.WriteLine(Utils.GetInput("day1.txt", "\n").Select(x => x / 3 - 2).Sum());
+        public static void Part1() => Console.WriteLine(Utils.GetNumberInput("day1.txt", "\n").Select(x => x / 3 - 2).Sum());
 
         public static void Part2()
         {
-            var input = new Queue<long>(Utils.GetInput("day1.txt", "\n"));
+            var input = new Queue<long>(Utils.GetNumberInput("day1.txt", "\n"));
             long sum = 0;
 
             while (input.Count != 0)

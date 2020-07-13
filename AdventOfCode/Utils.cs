@@ -8,7 +8,20 @@ namespace AdventOfCode
     {
         public const string INPUT_DIR = @"input";
 
-        public static long[] GetInput(string filename, string delimiter)
+        public static string GetText(string filename)
+        {
+            string path = Path.Combine(INPUT_DIR, filename);
+            return File.ReadAllText(path);
+        }
+
+        public static string[] GetRows(string filename)
+        {
+            string path = Path.Combine(INPUT_DIR, filename);
+            string text = File.ReadAllText(path);
+            return text.Split("\n");
+        }
+
+        public static long[] GetNumberInput(string filename, string delimiter)
         {
             string path     = Path.Combine(INPUT_DIR, filename);
             string text     = File.ReadAllText(path);
@@ -16,19 +29,6 @@ namespace AdventOfCode
             var parsedInput = input.Select(x => long.Parse(x));
 
             return parsedInput.ToArray();
-        }
-
-        public static string[] GetTextInput(string filename, string delimiter)
-        {
-            string path = Path.Combine(INPUT_DIR, filename);
-            string text = File.ReadAllText(path);
-            return text.Split(delimiter);
-        }
-
-        public static string GetText(string filename)
-        {
-            string path = Path.Combine(INPUT_DIR, filename);
-            return File.ReadAllText(path);
         }
     }
 }

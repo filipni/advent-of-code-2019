@@ -17,7 +17,7 @@ namespace AdventOfCode
 
         public static void RunDiagnosticTest(int code, string inputFilename)
         {
-            long[] data = Utils.GetInput(inputFilename, ",");
+            long[] data = Utils.GetNumberInput(inputFilename, ",");
             var inputQueue = new BlockingCollection<long> {code};
             var outputQueue = new BlockingCollection<long>();
 

@@ -19,7 +19,7 @@ namespace AdventOfCode
             foreach (List<int> settings in sequenceSettings)
             {
                 List<long> settingsConverted = settings.ConvertAll(x => (long)x);
-                long[] program = Utils.GetInput("day7.txt", ",");
+                long[] program = Utils.GetNumberInput("day7.txt", ",");
 
                 var amplifier = new AmplifierSequence(settingsConverted, program, feedbackOn);
                 long thrusterValue = amplifier.Run(0);
