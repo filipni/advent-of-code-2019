@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Numerics;
 using System.Collections.Generic;
 
 namespace AdventOfCode
